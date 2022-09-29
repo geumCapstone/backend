@@ -114,4 +114,7 @@ gradle-app.setting
 # gradle/wrapper/gradle-wrapper.properties
 
 # Server Settings
-application-dev.properties
+application.properties
+
+# Oracle Cloud Wallet
+**/cloudWallet
