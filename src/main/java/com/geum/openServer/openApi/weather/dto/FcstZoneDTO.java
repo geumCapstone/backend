@@ -1,20 +1,12 @@
 package com.geum.openServer.openApi.weather.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
-@Entity
-@NoArgsConstructor
 @Getter @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FcstZoneDTO {
-
-    @Id @Column(unique = true)
-    private Long id;
 
     private String regName; // 예보구역 지역명
 
