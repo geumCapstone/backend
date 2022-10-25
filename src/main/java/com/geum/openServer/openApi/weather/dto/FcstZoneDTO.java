@@ -1,19 +1,23 @@
 package com.geum.openServer.openApi.weather.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+@RequiredArgsConstructor
 @Getter @Setter
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class FcstZoneDTO {
 
-    private String regName; // 예보구역 지역명
+    private String regID;
+    private double lat;
+    private double lon;
+    private String regEn;
+    private String regName;
+    private String regSP;
+    private String regUp;
+    private long seq;
+    private long stnF3;
+    private String tmEd;
+    private String tmSt;
 
-    private double lat; // 위도
-    private double lon; // 경도
-    private double ht; // 해발고도
-
-    private String tmSt; // 시작시간
-    private String tmEd; // 종료시간
 }

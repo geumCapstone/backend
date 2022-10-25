@@ -31,23 +31,24 @@ public class FcstZoneReader implements ItemReader {
     private final ObjectMapper objectMapper;
     private List<FcstZoneDTO> fcstZoneData;
 
-    @Value("${openapi.weather.fcstzone.url}")
-    String url;
+    /* @Value("${openapi.weather.fcstzone.url}")
+    String url = "http://apis.data.go.kr/1360000/FcstZoneInfoService/getFcstZoneCd?pageNo=1&numOfRows=1000&dataType=JSON&serviceKey=9Dpca3K4xBbHh6k4Plv6dqURM1zCW+AKzjvw9LYt3Omp6JzusRMkwrM/QH/viN8MH+x06MmqekglEqIy0vRRmQ==";
+    */
 
+    StringBuilder url = new StringBuilder("http://apis.data.go.kr/1360000/FcstZoneInfoService/getFcstZoneCd?pageNo=1&numOfRows=1000&dataType=JSON&serviceKey=");
 
 
     @Override
     public Object read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
-        log.info("FcstZoneReader -> read execute");
-        fetchData();
+        log.info("FcstZoneReader -> read method execute");
 
-        return null;
+        return fetchData();
     }
 
     private List<FcstZoneDTO> fetchData() throws JsonProcessingException {
         httpHeaders.set("Accept", "application/json");
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url);
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url.toString());
         log.info("FcstZone 데이터 읽는 중: {}", uriComponentsBuilder.toUriString());
 
         ResponseEntity<String> response = restTemplate.exchange(uriComponentsBuilder.toUriString(), HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class);
@@ -59,6 +60,8 @@ public class FcstZoneReader implements ItemReader {
 
         FcstZoneDTO[] fcstZoneData = objectMapper.readValue(objectMapper.writeValueAsString(itemsProperty.get("item")), FcstZoneDTO[].class);
         // HashMap<String, Object> itemObject = objectMapper.readValue(response.getBody(), HashMap.class);
+
+        log.info("data: {}", fcstZoneData);
 
         return Arrays.asList(fcstZoneData);
     }

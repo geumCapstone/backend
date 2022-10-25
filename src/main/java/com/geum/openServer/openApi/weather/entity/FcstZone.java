@@ -23,17 +23,17 @@ public class FcstZone {
 
     private double lat; // 위도
     private double lon; // 경도
-    private double ht; // 해발고도
+    // private double ht; // 해발고도
 
     private String tmSt; // 시작시간
     private String tmEd; // 종료시간
 
     @Builder
-    public FcstZone(String regName, double lat, double lon, double ht, String tmSt, String tmEd) {
+    public FcstZone(String regName, double lat, double lon, String tmSt, String tmEd) {
         this.regName = regName;
         this.lat = lat;
         this.lon = lon;
-        this.ht = ht;
+        // this.ht = ht;
         this.tmSt = tmSt;
         this.tmEd = tmEd;
     }
