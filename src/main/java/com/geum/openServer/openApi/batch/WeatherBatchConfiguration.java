@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -48,6 +49,7 @@ public class WeatherBatchConfiguration {
                 .build();
     }
 
+    @Bean
     public Step fcstZoneStep() {
         log.info("WeatherBatchConfiguration -> fcstZoneStep");
         // fcstZone Step 구성 및 Job에 올림

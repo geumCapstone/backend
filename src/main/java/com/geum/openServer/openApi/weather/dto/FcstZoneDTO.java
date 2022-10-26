@@ -8,12 +8,12 @@ import lombok.Setter;
 @Getter @Setter
 public class FcstZoneDTO {
 
-    private String regID;
+    private String regId;
     private double lat;
     private double lon;
     private String regEn;
     private String regName;
-    private String regSP;
+    private String regSp;
     private String regUp;
     private long seq;
     private long stnF3;

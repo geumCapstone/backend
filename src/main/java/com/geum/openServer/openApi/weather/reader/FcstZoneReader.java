@@ -16,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Arrays;
@@ -31,27 +32,62 @@ public class FcstZoneReader implements ItemReader {
     private final ObjectMapper objectMapper;
     private List<FcstZoneDTO> fcstZoneData;
 
-    /* @Value("${openapi.weather.fcstzone.url}")
-    String url = "http://apis.data.go.kr/1360000/FcstZoneInfoService/getFcstZoneCd?pageNo=1&numOfRows=1000&dataType=JSON&serviceKey=9Dpca3K4xBbHh6k4Plv6dqURM1zCW+AKzjvw9LYt3Omp6JzusRMkwrM/QH/viN8MH+x06MmqekglEqIy0vRRmQ==";
-    */
-
-    StringBuilder url = new StringBuilder("http://apis.data.go.kr/1360000/FcstZoneInfoService/getFcstZoneCd?pageNo=1&numOfRows=1000&dataType=JSON&serviceKey=");
+    @Value("${openapi.weather.fcstzone.key}")
+    String serviceKey;
+    int currentPage = 1;
+    int totalPage;
+    int numOfRows = 1000;
+    int nextIndex = 0;
 
 
     @Override
     public Object read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         log.info("FcstZoneReader -> read method execute");
 
-        return fetchData();
+        if(fcstZoneDataIsNotInitialized()) {
+            // 초기데이터 없으면 호출함
+            fcstZoneData = fetchData(currentPage, numOfRows);
+        }
+
+        FcstZoneDTO nextData = null;
+
+        if (nextIndex < fcstZoneData.size()) {
+            nextData = fcstZoneData.get(nextIndex);
+            nextIndex += 1;
+
+            // 다음 내용이 없다면 currentPage를 증가시키는데.. totalPage보다 넘는 경우는 종료시킴
+            if (nextIndex == fcstZoneData.size()) {
+                if (totalPage <= currentPage * numOfRows) return null;
+
+                currentPage += 1;
+                nextIndex = 0;
+                nextData = null;
+            }
+        }
+        log.info("Found data: {}", nextData);
+
+        return nextData;
     }
 
-    private List<FcstZoneDTO> fetchData() throws JsonProcessingException {
+    private boolean fcstZoneDataIsNotInitialized() {
+        return this.fcstZoneData == null;
+    }
+
+    private List<FcstZoneDTO> fetchData(int currentPage, int numOfRows) throws JsonProcessingException {
+        // 헤더 설정
         httpHeaders.set("Accept", "application/json");
+        // 접속 주소 설정
+        UriComponents uriComponents = UriComponentsBuilder
+                .fromUriString("http://apis.data.go.kr/1360000/FcstZoneInfoService/getFcstZoneCd?serviceKey=MS9S6L93rOOZBSjA6GRYEPCnIefMccC5H4zB/xLQC3u5ZEdjMWQCr7lA7F3YB2WBxU6SON/YiuYL48i6O4IrIg==")
+                .queryParam("numOfRows", numOfRows)
+                .queryParam("pageNo", currentPage)
+                .queryParam("dataType", "JSON")
+                .build();
+        uriComponents.encode();
+        log.info("FcstZone 데이터 읽는 중: {}", uriComponents.toUriString());
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url.toString());
-        log.info("FcstZone 데이터 읽는 중: {}", uriComponentsBuilder.toUriString());
+        ResponseEntity<String> response = restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class);
 
-        ResponseEntity<String> response = restTemplate.exchange(uriComponentsBuilder.toUriString(), HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class);
         /** 수정 필요라인 */
         Map<String, Object> responseObject = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
         Map<String, Object> responseProperty = (Map<String, Object>) responseObject.get("response");
@@ -59,7 +95,7 @@ public class FcstZoneReader implements ItemReader {
         Map<String, Object> itemsProperty = (Map<String, Object>) bodyProperty.get("items");
 
         FcstZoneDTO[] fcstZoneData = objectMapper.readValue(objectMapper.writeValueAsString(itemsProperty.get("item")), FcstZoneDTO[].class);
-        // HashMap<String, Object> itemObject = objectMapper.readValue(response.getBody(), HashMap.class);
+        totalPage = Integer.parseInt(bodyProperty.get("totalCount").toString());
 
         log.info("data: {}", fcstZoneData);
 

@@ -5,10 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @NoArgsConstructor
@@ -16,7 +13,7 @@ import javax.persistence.Table;
 @Table(name = "fcstZone")
 public class FcstZone {
 
-    @Id @Column(unique = true)
+    @Id @Column(unique = true) @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String regName; // 예보구역 지역명
