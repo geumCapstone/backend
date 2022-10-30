@@ -1,16 +1,17 @@
 package com.geum.openServer.openApi.batch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.geum.openServer.openApi.weather.dto.AnimalMedicineDTO;
 import com.geum.openServer.openApi.weather.dto.FcstZoneDTO;
+import com.geum.openServer.openApi.weather.entity.AnimalMedicine;
 import com.geum.openServer.openApi.weather.entity.FcstZone;
-import com.geum.openServer.openApi.weather.entity.FcstZoneRepository;
+import com.geum.openServer.openApi.weather.reader.AnimalMedicineReader;
 import com.geum.openServer.openApi.weather.reader.FcstZoneReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -19,7 +20,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.persistence.EntityManagerFactory;
 
@@ -32,18 +32,19 @@ public class WeatherBatchConfiguration {
     private final EntityManagerFactory entityManagerFactory;
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
+
     /** Reader Object */
     private final RestTemplate restTemplate;
     private final HttpHeaders httpHeaders;
     private final ObjectMapper objectMapper;
 
     @Bean
-    public Job fcstZoneJob() {
-        log.info("WeatherBatchConfiguration -> fcstZoneJob 실행");
+    public Job allJob() {
+        log.info("WeatherBatchConfiguration Job 실행");
         // Job 실행
-        return jobBuilderFactory.get("fcstZoneJob")
+        return jobBuilderFactory.get("allJob")
                 .start(fcstZoneStep())
-                .on("STARTED").stopAndRestart(fcstZoneStep())
+                .start(animalMedicineStep())
                 .on("FAILED").fail()
                 .end()
                 .build();
@@ -61,9 +62,25 @@ public class WeatherBatchConfiguration {
                 .build();
     }
 
+    @Bean
+    public Step animalMedicineStep() {
+        log.info("WeatherBatchConfiguration -> animalMedicineStep");
+        return stepBuilderFactory.get("animalMedicineStep")
+                .<AnimalMedicineDTO, AnimalMedicine>chunk(1000)
+                .reader(animalMedicineItemReader())
+                .processor(animalMedicineItemProcessor())
+                .writer(animalMedicineJpaItemWriter())
+                .build();
+
+    }
+
     /** Reader */
     public ItemReader<FcstZoneDTO> fcstZoneItemReader() {
         return new FcstZoneReader(restTemplate, httpHeaders, objectMapper);
+    }
+
+    public ItemReader<AnimalMedicineDTO> animalMedicineItemReader() {
+        return new AnimalMedicineReader(restTemplate, httpHeaders, objectMapper);
     }
 
     /** ItemProcessor */
@@ -78,9 +95,26 @@ public class WeatherBatchConfiguration {
                 .build();
     }
 
+    public ItemProcessor<AnimalMedicineDTO, AnimalMedicine> animalMedicineItemProcessor() {
+        return AnimalMedicineDTO -> AnimalMedicine.builder()
+                .shapNm(AnimalMedicineDTO.getShapNm())
+                .animalOnlyMdcinNmKor(AnimalMedicineDTO.getAnimalOnlyMdcinNmKor())
+                .animalOnlyMdcinNmEng(AnimalMedicineDTO.getAnimalOnlyMdcinNmEng())
+                .systmNm(AnimalMedicineDTO.getSystmNm())
+                .applcObjAnimal(AnimalMedicineDTO.getApplcObjAnimal())
+                .stbly(AnimalMedicineDTO.getStbly())
+                .build();
+    }
+
     /** Writer */
     public JpaItemWriter<FcstZone> fcstZoneJpaItemWriter() {
         JpaItemWriter<FcstZone> itemWriter = new JpaItemWriter<>();
+        itemWriter.setEntityManagerFactory(entityManagerFactory);
+        return itemWriter;
+    }
+
+    public JpaItemWriter<AnimalMedicine> animalMedicineJpaItemWriter() {
+        JpaItemWriter<AnimalMedicine> itemWriter = new JpaItemWriter<>();
         itemWriter.setEntityManagerFactory(entityManagerFactory);
         return itemWriter;
     }

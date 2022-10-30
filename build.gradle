@@ -30,8 +30,9 @@ dependencies {
 
 	// Spring Batch
 	implementation 'org.springframework.boot:spring-boot-starter-batch'
-	implementation 'co.elastic.clients:elasticsearch-java:8.4.3'
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3' // elastic에서 추천하는 버전으로 implementation
+	/** 필요시 elasticsearch로 변경 예정 */
+	// implementation 'co.elastic.clients:elasticsearch-java:8.4.3'
+	// implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
 	implementation 'org.springframework.boot:spring-boot-starter-quartz'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
