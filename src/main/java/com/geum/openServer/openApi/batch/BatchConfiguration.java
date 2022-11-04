@@ -3,8 +3,10 @@ package com.geum.openServer.openApi.batch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geum.openServer.openApi.weather.dto.AnimalMedicineDTO;
 import com.geum.openServer.openApi.weather.dto.FcstZoneDTO;
+import com.geum.openServer.openApi.weather.entity.AnimalDeseaseInfo;
 import com.geum.openServer.openApi.weather.entity.AnimalMedicine;
 import com.geum.openServer.openApi.weather.entity.FcstZone;
+import com.geum.openServer.openApi.weather.reader.AnimalDeseaseInfoReader;
 import com.geum.openServer.openApi.weather.reader.AnimalMedicineReader;
 import com.geum.openServer.openApi.weather.reader.FcstZoneReader;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JpaItemWriter;
+import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -26,7 +29,7 @@ import javax.persistence.EntityManagerFactory;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class WeatherBatchConfiguration {
+public class BatchConfiguration {
 
     /** Batch Object */
     private final EntityManagerFactory entityManagerFactory;
@@ -38,12 +41,25 @@ public class WeatherBatchConfiguration {
     private final HttpHeaders httpHeaders;
     private final ObjectMapper objectMapper;
 
+    /** ETC */
+    private final AnimalDeseaseInfoReader animalDeseaseInfoReader;
+
+    /** Job */
     @Bean
-    public Job allJob() {
-        log.info("WeatherBatchConfiguration Job 실행");
+    public Job fcstZoneJob() {
+        log.info("BatchConfiguration -> fcstZoneJob 실행");
         // Job 실행
-        return jobBuilderFactory.get("allJob")
+        return jobBuilderFactory.get("fcstZoneJob")
                 .start(fcstZoneStep())
+                .on("FAILED").fail()
+                .end()
+                .build();
+    }
+
+    @Bean
+    public Job animalMedicineJob() {
+        log.info("BatchConfiguration -> animalMedicineJob 실행");
+        return jobBuilderFactory.get("animalMedicineJob")
                 .start(animalMedicineStep())
                 .on("FAILED").fail()
                 .end()
@@ -51,9 +67,19 @@ public class WeatherBatchConfiguration {
     }
 
     @Bean
+    public Job animalDeseaseInfoJob() {
+        log.info("BatchConfiguration -> animalDeseaseInfoJob 실행");
+        return jobBuilderFactory.get("animalDeseaseInfoJob")
+                .start(animalDeseaseInfoStep())
+                .on("FAILED").fail()
+                .end()
+                .build();
+    }
+
+    /** Step */
+    @Bean
     public Step fcstZoneStep() {
-        log.info("WeatherBatchConfiguration -> fcstZoneStep");
-        // fcstZone Step 구성 및 Job에 올림
+        log.info("BatchConfiguration -> fcstZoneStep");
         return stepBuilderFactory.get("fcstZoneStep")
                 .<FcstZoneDTO, FcstZone>chunk(1000)
                 .reader(fcstZoneItemReader())
@@ -64,14 +90,23 @@ public class WeatherBatchConfiguration {
 
     @Bean
     public Step animalMedicineStep() {
-        log.info("WeatherBatchConfiguration -> animalMedicineStep");
+        log.info("BatchConfiguration -> animalMedicineStep");
         return stepBuilderFactory.get("animalMedicineStep")
                 .<AnimalMedicineDTO, AnimalMedicine>chunk(1000)
                 .reader(animalMedicineItemReader())
                 .processor(animalMedicineItemProcessor())
                 .writer(animalMedicineJpaItemWriter())
                 .build();
+    }
 
+    @Bean
+    public Step animalDeseaseInfoStep() {
+        log.info("BatchConfiguration -> animalDeseaseInfoStep");
+        return stepBuilderFactory.get("animalDeseaseInfoStep")
+                .<AnimalDeseaseInfo, AnimalDeseaseInfo>chunk(1000)
+                .reader(animalDeseaseInfoReader.csvFileItemReader())
+                .writer(animalDeseaseInfoJpaItemWriter())
+                .build();
     }
 
     /** Reader */
@@ -82,6 +117,7 @@ public class WeatherBatchConfiguration {
     public ItemReader<AnimalMedicineDTO> animalMedicineItemReader() {
         return new AnimalMedicineReader(restTemplate, httpHeaders, objectMapper);
     }
+
 
     /** ItemProcessor */
     public ItemProcessor<FcstZoneDTO, FcstZone> fcstZoneItemProcessor() {
@@ -115,6 +151,12 @@ public class WeatherBatchConfiguration {
 
     public JpaItemWriter<AnimalMedicine> animalMedicineJpaItemWriter() {
         JpaItemWriter<AnimalMedicine> itemWriter = new JpaItemWriter<>();
+        itemWriter.setEntityManagerFactory(entityManagerFactory);
+        return itemWriter;
+    }
+
+    public JpaItemWriter<AnimalDeseaseInfo> animalDeseaseInfoJpaItemWriter() {
+        JpaItemWriter<AnimalDeseaseInfo> itemWriter = new JpaItemWriter<>();
         itemWriter.setEntityManagerFactory(entityManagerFactory);
         return itemWriter;
     }
