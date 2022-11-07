@@ -1,14 +1,17 @@
 package com.geum.openServer.openApi.batch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.geum.openServer.openApi.weather.dto.AnimalMedicineDTO;
-import com.geum.openServer.openApi.weather.dto.FcstZoneDTO;
-import com.geum.openServer.openApi.weather.entity.AnimalDeseaseInfo;
-import com.geum.openServer.openApi.weather.entity.AnimalMedicine;
-import com.geum.openServer.openApi.weather.entity.FcstZone;
-import com.geum.openServer.openApi.weather.reader.AnimalDeseaseInfoReader;
-import com.geum.openServer.openApi.weather.reader.AnimalMedicineReader;
-import com.geum.openServer.openApi.weather.reader.FcstZoneReader;
+import com.geum.openServer.openApi.api.dto.AnimalMedicineDTO;
+import com.geum.openServer.openApi.api.dto.ColdIdxDTO;
+import com.geum.openServer.openApi.api.dto.FcstZoneDTO;
+import com.geum.openServer.openApi.api.entity.AnimalDeseaseInfo;
+import com.geum.openServer.openApi.api.entity.AnimalMedicine;
+import com.geum.openServer.openApi.api.entity.ColdIdx;
+import com.geum.openServer.openApi.api.entity.FcstZone;
+import com.geum.openServer.openApi.api.reader.AnimalDeseaseInfoReader;
+import com.geum.openServer.openApi.api.reader.AnimalMedicineReader;
+import com.geum.openServer.openApi.api.reader.ColdIdxReader;
+import com.geum.openServer.openApi.api.reader.FcstZoneReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -18,7 +21,6 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JpaItemWriter;
-import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -76,6 +78,16 @@ public class BatchConfiguration {
                 .build();
     }
 
+    @Bean
+    public Job coldIdxJob() {
+        log.info("BatchConfiguration -> coldIdxJob 실행");
+        return jobBuilderFactory.get("coldIdxJob")
+               .start(coldIdxStep())
+               .on("FAILED").fail()
+               .end()
+               .build();
+    }
+
     /** Step */
     @Bean
     public Step fcstZoneStep() {
@@ -109,6 +121,17 @@ public class BatchConfiguration {
                 .build();
     }
 
+    @Bean
+    public Step coldIdxStep() {
+        log.info("BatchConfiguration -> coldIdxStep");
+        return stepBuilderFactory.get("coldIdxStep")
+                .<ColdIdxDTO, ColdIdx>chunk(1000)
+                .reader(coldIdxItemReader())
+                .processor(coldIdxItemProcessor())
+                .writer(coldIdxJpaItemWriter())
+                .build();
+    }
+
     /** Reader */
     public ItemReader<FcstZoneDTO> fcstZoneItemReader() {
         return new FcstZoneReader(restTemplate, httpHeaders, objectMapper);
@@ -116,6 +139,10 @@ public class BatchConfiguration {
 
     public ItemReader<AnimalMedicineDTO> animalMedicineItemReader() {
         return new AnimalMedicineReader(restTemplate, httpHeaders, objectMapper);
+    }
+
+    public ItemReader<ColdIdxDTO> coldIdxItemReader() {
+        return new ColdIdxReader(restTemplate, httpHeaders, objectMapper);
     }
 
 
@@ -142,6 +169,17 @@ public class BatchConfiguration {
                 .build();
     }
 
+    public ItemProcessor<ColdIdxDTO, ColdIdx> coldIdxItemProcessor() {
+        return ColdIdxDTO -> ColdIdx.builder()
+                .areaNo(ColdIdxDTO.getAreaNo())
+                .date_time(ColdIdxDTO.getDate_time())
+                .today(ColdIdxDTO.getToday())
+                .tomorrow(ColdIdxDTO.getTomorrow())
+                .dayaftertomorrow(ColdIdxDTO.getDayaftertomorrow())
+                .twodaysaftertomorrow(ColdIdxDTO.getTwodaysaftertomorrow())
+                .build();
+    }
+
     /** Writer */
     public JpaItemWriter<FcstZone> fcstZoneJpaItemWriter() {
         JpaItemWriter<FcstZone> itemWriter = new JpaItemWriter<>();
@@ -157,6 +195,12 @@ public class BatchConfiguration {
 
     public JpaItemWriter<AnimalDeseaseInfo> animalDeseaseInfoJpaItemWriter() {
         JpaItemWriter<AnimalDeseaseInfo> itemWriter = new JpaItemWriter<>();
+        itemWriter.setEntityManagerFactory(entityManagerFactory);
+        return itemWriter;
+    }
+
+    public JpaItemWriter<ColdIdx> coldIdxJpaItemWriter() {
+        JpaItemWriter<ColdIdx> itemWriter = new JpaItemWriter<>();
         itemWriter.setEntityManagerFactory(entityManagerFactory);
         return itemWriter;
     }

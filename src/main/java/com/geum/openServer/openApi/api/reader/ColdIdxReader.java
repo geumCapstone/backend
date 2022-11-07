@@ -1,16 +1,15 @@
-package com.geum.openServer.openApi.weather.reader;
+package com.geum.openServer.openApi.api.reader;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.geum.openServer.openApi.weather.dto.FcstZoneDTO;
+import com.geum.openServer.openApi.api.dto.ColdIdxDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -19,71 +18,82 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
-public class FcstZoneReader implements ItemReader {
+public class ColdIdxReader implements ItemReader {
 
     private final RestTemplate restTemplate;
     private final HttpHeaders httpHeaders;
     private final ObjectMapper objectMapper;
-    private List<FcstZoneDTO> fcstZoneData;
 
-    @Value("${openapi.weather.fcstzone.key}")
-    String serviceKey;
+    private List<ColdIdxDTO> coldIdxData;
+    private int time = Integer.parseInt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHH"))) - 1;
+    private String[] areaCode = new String[] {
+            "1100000000",
+            "2600000000",
+            "2700000000",
+            "2800000000",
+            "2900000000",
+            "3000000000",
+            "3100000000",
+            "3600000000",
+            "4100000000",
+            "4200000000",
+            "4300000000",
+            "4400000000",
+            "4500000000",
+            "4600000000",
+            "4700000000",
+            "4800000000",
+            "5000000000",
+            "5019000000"};
     private int currentPage = 1;
-    private int totalPage;
+    private int totalPage = 0;
     private int numOfRows = 1000;
-    private int nextIndex = 0;
-
 
     @Override
     public Object read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
-        log.info("FcstZoneReader의 read 메소드가 실행중입니다.");
+        ColdIdxDTO nextData = null;
 
-        if(fcstZoneDataIsNotInitialized()) {
-            // 초기데이터 없으면 호출함
-            fcstZoneData = fetchData(currentPage, numOfRows);
+        if (totalPage != 18) {
+            coldIdxData = fetchData(currentPage, numOfRows);
+            nextData = coldIdxData.get(0);
+            totalPage += 1;
+        } else {
+            nextData = null;
+            return null;
         }
 
-        FcstZoneDTO nextData = null;
-
-        if (nextIndex < fcstZoneData.size()) {
-            nextData = fcstZoneData.get(nextIndex);
-            nextIndex += 1;
-
-            if (nextIndex == fcstZoneData.size()) {
-                if (totalPage <= currentPage * numOfRows) return null;
-
-                currentPage += 1;
-                nextIndex = 0;
-                nextData = null;
-            }
-        }
         log.info("Found data: {}", nextData);
 
         return nextData;
     }
 
-    private boolean fcstZoneDataIsNotInitialized() {
-        return this.fcstZoneData == null;
+    private boolean coldIdxDataIsNotInitialized() {
+        return this.coldIdxData == null;
     }
 
-    private List<FcstZoneDTO> fetchData(int currentPage, int numOfRows) throws JsonProcessingException {
+    private List<ColdIdxDTO> fetchData(int currentPage, int numOfRows) throws JsonProcessingException {
         // 헤더 설정
         httpHeaders.set("Accept", "application/json");
+
         // 접속 주소 설정
         UriComponents uriComponents = UriComponentsBuilder
-                .fromUriString("http://apis.data.go.kr/1360000/FcstZoneInfoService/getFcstZoneCd?serviceKey=MS9S6L93rOOZBSjA6GRYEPCnIefMccC5H4zB/xLQC3u5ZEdjMWQCr7lA7F3YB2WBxU6SON/YiuYL48i6O4IrIg==")
+                .fromUriString("http://apis.data.go.kr/1360000/HealthWthrIdxServiceV2/getColdIdxV2?serviceKey=MS9S6L93rOOZBSjA6GRYEPCnIefMccC5H4zB%2FxLQC3u5ZEdjMWQCr7lA7F3YB2WBxU6SON%2FYiuYL48i6O4IrIg%3D%3D")
                 .queryParam("numOfRows", numOfRows)
                 .queryParam("pageNo", currentPage)
                 .queryParam("dataType", "JSON")
+                .queryParam("areaNo", areaCode[totalPage])
+                .queryParam("time", time)
                 .build();
         uriComponents.encode();
-        log.info("FcstZone 데이터 읽는 중: {}", uriComponents.toUriString());
+        log.info("ColdIdx 데이터 읽는 중: {}", uriComponents.toUriString());
 
         ResponseEntity<String> response = restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, new HttpEntity<>(httpHeaders), String.class);
 
@@ -93,12 +103,11 @@ public class FcstZoneReader implements ItemReader {
         Map<String, Object> bodyProperty = (Map<String, Object>) responseProperty.get("body");
         Map<String, Object> itemsProperty = (Map<String, Object>) bodyProperty.get("items");
 
-        FcstZoneDTO[] fcstZoneData = objectMapper.readValue(objectMapper.writeValueAsString(itemsProperty.get("item")), FcstZoneDTO[].class);
-        totalPage = Integer.parseInt(bodyProperty.get("totalCount").toString());
+        ColdIdxDTO[] coldIdxData = objectMapper.readValue(objectMapper.writeValueAsString(itemsProperty.get("item")), ColdIdxDTO[].class);
 
-        log.info("data: {}", fcstZoneData);
+        log.info("data: {}", coldIdxData);
 
-        return Arrays.asList(fcstZoneData);
+        return Arrays.asList(coldIdxData);
     }
 
 }

@@ -1,4 +1,4 @@
-package com.geum.openServer.openApi.weather.dto;
+package com.geum.openServer.openApi.api.dto;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

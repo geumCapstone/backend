@@ -1,7 +1,6 @@
-package com.geum.openServer.openApi.weather.reader;
+package com.geum.openServer.openApi.api.reader;
 
-import com.geum.openServer.openApi.weather.entity.AnimalDeseaseInfo;
-import org.springframework.batch.item.ItemReader;
+import com.geum.openServer.openApi.api.entity.AnimalDeseaseInfo;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;

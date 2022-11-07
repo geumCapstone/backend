@@ -1,4 +1,4 @@
-package com.geum.openServer.openApi.weather.entity;
+package com.geum.openServer.openApi.api.entity;
 
 
 import lombok.Getter;
@@ -10,7 +10,7 @@ import javax.persistence.*;
 @RequiredArgsConstructor
 @Getter @Setter
 @Entity
-public class AnimalDeseaseInfo {    // "DISS_NO","DISS_NM","ENG_DISS_NM","INFO_OFFER_NM","RGSDE","MAIN_INFC_ANIMAL","CAUSE_CMMN_CL"
+public class AnimalDeseaseInfo {
 
     @Id @Column(unique = true) @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long DISS_NO;

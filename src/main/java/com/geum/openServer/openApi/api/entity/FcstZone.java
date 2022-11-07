@@ -1,4 +1,4 @@
-package com.geum.openServer.openApi.weather.entity;
+package com.geum.openServer.openApi.api.entity;
 
 import lombok.Builder;
 import lombok.Getter;
