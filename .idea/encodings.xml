@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="Encoding">
-    <file url="file://$PROJECT_DIR$/src/main/resources/csv/animal_desease_2015.csv" charset="EUC-KR" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/csv/동물+질병+정보(2015).csv" charset="EUC-KR" />
-  </component>
-</project>
