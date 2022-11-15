@@ -64,6 +64,19 @@ public class AnimalController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("v1/animals/{id}")
+    public ResponseEntity<Animal> updateAnimal(@PathVariable("id") Long id, @RequestBody Animal animal) {
+        if (!animalRepository.existsById(animal.getId())) {
+            return ResponseEntity.notFound().build();
+        } else if (animal.getId() != id) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        animalRepository.save(animal);
+
+        return ResponseEntity.ok().build();
+    }
+
     /** 제네릭 문법을 통한 ResponseEntity 데이터 전달 효율 증가 */
     @Getter
     @Setter
