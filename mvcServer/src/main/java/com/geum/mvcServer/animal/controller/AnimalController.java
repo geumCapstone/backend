@@ -50,8 +50,18 @@ public class AnimalController {
     }
 
     @DeleteMapping("v1/animals")
-    public ResponseEntity<Animal> deleteAnimal() {
-        return null;
+    public ResponseEntity<Animal> deleteAnimal(@RequestBody Animal animal) {
+        if(!animalRepository.existsById(animal.getId())) {
+            return ResponseEntity.notFound().build();
+        }
+
+        animalRepository.delete(animal);
+
+        if(animalRepository.existsById(animal.getId())) {
+            return ResponseEntity.accepted().build(); // 202, 작업 대기
+        }
+
+        return ResponseEntity.ok().build();
     }
 
     /** 제네릭 문법을 통한 ResponseEntity 데이터 전달 효율 증가 */
