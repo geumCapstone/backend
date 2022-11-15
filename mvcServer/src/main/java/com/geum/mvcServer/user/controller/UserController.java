@@ -28,6 +28,7 @@ public class UserController {
     }
 
 
+
     /** 제네릭 문법을 통한 ResponseEntity 데이터 전달 효율 증가 */
     @Getter @Setter
     static class Result<T> {
