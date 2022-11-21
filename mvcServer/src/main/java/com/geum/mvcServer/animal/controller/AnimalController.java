@@ -27,7 +27,7 @@ public class AnimalController {
     private final AnimalMedicineRepository animalMedicineRepository;
     private final AnimalService animalService;
 
-    @GetMapping("v1/animals/{providerId}")
+    @RequestMapping("v1/animals/{providerId}")
     public ResponseEntity<Result<List<Animal>>> getAllAnimals(@PathVariable("providerId") String providerId) {
         List<Animal> animalList = animalRepository.findByProviderId(providerId);
 

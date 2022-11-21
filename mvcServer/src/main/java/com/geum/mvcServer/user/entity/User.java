@@ -11,10 +11,10 @@ import java.util.List;
 
 @Entity
 @Getter @Setter
-@Table(name = "userData")
+@Table(name = "user_data")
 public class User {
 
-    @Id @Column(unique = true) @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id @Column(unique = true) @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true)
@@ -24,4 +24,8 @@ public class User {
 
     @OneToMany(mappedBy = "providerId")
     private List<Animal> animals = new ArrayList<>();
+
+    public boolean isEmpty() {
+        return id == null || providerId == null || nickname == null;
+    }
 }

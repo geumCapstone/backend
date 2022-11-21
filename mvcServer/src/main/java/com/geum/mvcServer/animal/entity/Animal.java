@@ -11,11 +11,10 @@ import java.time.LocalDateTime;
 @Getter @Setter
 public class Animal {
 
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "providerId")
+    @ManyToOne
     private User providerId;
 
     private String name;

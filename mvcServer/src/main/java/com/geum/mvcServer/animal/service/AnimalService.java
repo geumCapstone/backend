@@ -8,7 +8,6 @@ import com.geum.mvcServer.batch.entity.AnimalDeseaseInfoRepository;
 import com.geum.mvcServer.batch.entity.AnimalMedicine;
 import com.geum.mvcServer.batch.entity.AnimalMedicineRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
