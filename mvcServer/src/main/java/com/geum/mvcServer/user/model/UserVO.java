@@ -6,7 +6,11 @@ import lombok.Setter;
 @Getter @Setter
 public class UserVO {
 
-    private String providerId;
+    private String userId;
+
+    private String password;
+
+    private String email;
 
     private String nickname;
 }

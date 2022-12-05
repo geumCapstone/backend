@@ -1,31 +1,45 @@
 package com.geum.mvcServer.user.entity;
 
 
-import com.geum.mvcServer.animal.entity.Animal;
+import com.sun.istack.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Timestamp;
 
 @Entity
 @Getter @Setter
-@Table(name = "user_data")
+@Table(name = "user_data", indexes = @Index(name = "usrId", columnList = "userId"))
 public class User {
 
-    @Id @Column(unique = true) @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @Column(unique = true)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    private String providerId; // SNS 인증 후 나타나는 고유 번호
+    @NotNull @Column(unique = true)
+    private String userId;
 
+    @NotNull
+    private String password;
+
+    @Column(nullable = true)
+    private String oldPassword;
+
+    @NotNull @Column(unique = true)
+    private String email;
+
+    @NotNull
     private String nickname;
 
-    @OneToMany(mappedBy = "providerId")
-    private List<Animal> animals = new ArrayList<>();
+    @CreationTimestamp
+    private Timestamp regDate;
+
+    private String role; // ROLE_USER, ROLE_ADMIN
 
     public boolean isEmpty() {
-        return id == null || providerId == null || nickname == null;
+        return userId != null || password != null || email != null || nickname != null || role != null;
     }
+
 }

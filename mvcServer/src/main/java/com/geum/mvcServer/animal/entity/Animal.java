@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 @Getter @Setter
 public class Animal {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @Column(unique = true)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
