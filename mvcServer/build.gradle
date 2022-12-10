@@ -36,6 +36,7 @@ dependencies {
 	// 회원 인증 절차를 위한 Security, JWT 추가
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'com.auth0:java-jwt:4.2.1'
+	implementation 'javax.xml.bind:jaxb-api:2.3.0'
 }
 
 tasks.named('test') {

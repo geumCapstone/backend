@@ -15,19 +15,6 @@ public class UserController {
 
     private final UserService userService;
 
-    /*
-    @RequestMapping("v1/users/{providerId}")
-    public ResponseEntity<User> idCheck(@PathVariable("providerId") String providerId) {
-        User userData = userService.idCheck(providerId);
-        if(userData.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // return ResponseEntity.ok().body(userRepository.findByProviderId(providerId));
-        return new ResponseEntity<>(userData, HttpStatus.OK);
-    }
-     */
-
     @PostMapping("v1/users/register")
     public ResponseEntity<User> registerUser(@RequestBody UserVO userVO) {
         User user = userService.registerUser(userVO);
@@ -35,7 +22,7 @@ public class UserController {
         if (user.isEmpty()) {
             return ResponseEntity.internalServerError().build();
         } else {
-            return ResponseEntity.ok().body(user);
+            return ResponseEntity.ok().build();
         }
     }
 

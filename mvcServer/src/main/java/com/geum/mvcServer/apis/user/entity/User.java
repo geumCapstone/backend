@@ -1,16 +1,21 @@
 package com.geum.mvcServer.apis.user.entity;
 
 
+import com.geum.mvcServer.apis.animal.entity.Animal;
 import com.sun.istack.NotNull;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Data
-@Table(name = "user_data", indexes = @Index(name = "usrId", columnList = "userId"))
+@Getter @Setter
+@Table(name = "user_data",
+        indexes = @Index(name = "username", columnList = "username"))
 public class User {
 
     @Id @Column(unique = true)
@@ -39,6 +44,9 @@ public class User {
 
     @NotNull
     private String role; // ROLE_USER, ROLE_ADMIN
+
+    @OneToMany(mappedBy = "id", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Animal> animals = new ArrayList<>();
 
     public boolean isEmpty() {
         return username != null || password != null || email != null || nickname != null || role != null;

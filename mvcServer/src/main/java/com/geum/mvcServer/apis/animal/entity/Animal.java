@@ -15,8 +15,9 @@ public class Animal {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private User providerId;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    // @JoinColumn(name = "userId")
+    private User userId;
 
     private String name;
 

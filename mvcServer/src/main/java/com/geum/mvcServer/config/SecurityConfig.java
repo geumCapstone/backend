@@ -7,9 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -22,7 +24,6 @@ import org.springframework.web.filter.CorsFilter;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
 
     @Bean
@@ -33,16 +34,18 @@ public class SecurityConfig {
                 .addFilter(corsFilter()) // @CrossOrigin
                 .formLogin().disable()
                 .httpBasic().disable()
-                .addFilter(new JwtAuthenticationFilter(authenticationManager))
-                .addFilter(new JwtAuthorizationFilter(authenticationManager, userRepository))
-                .authorizeRequests()
-                .antMatchers("/v1/users/**")
-                .access("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-                .antMatchers("/v1/animals/**")
-                .access("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-                .antMatchers("v1/event/**")
-                .access("hasRole('ROLE_ADMIN')")
-                .anyRequest().permitAll();
+                .apply(new CustomDsl())
+                .and()
+                .authorizeRequests(authorize -> authorize
+                        .antMatchers("/**").permitAll()
+                        .antMatchers("/v1/users/**")
+                        .access("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+                        .antMatchers("/v1/animals/**")
+                        .access("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+                        .antMatchers("v1/event/**")
+                        .access("hasRole('ROLE_ADMIN')")
+                        .anyRequest().permitAll());
+
 
         return http.build();
     }
@@ -56,8 +59,26 @@ public class SecurityConfig {
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/v1/**", config);
+        source.registerCorsConfiguration("/**", config);
 
         return new CorsFilter(source);
     }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    public class CustomDsl extends AbstractHttpConfigurer<CustomDsl, HttpSecurity> {
+        @Override
+        public void configure(HttpSecurity http) throws Exception {
+            AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
+            http
+                    .addFilter(new JwtAuthenticationFilter(authenticationManager))
+                    .addFilter(new JwtAuthorizationFilter(authenticationManager, userRepository));
+        }
+    }
+
 
 }

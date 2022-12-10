@@ -5,9 +5,7 @@ import com.geum.mvcServer.apis.animal.entity.AnimalRepository;
 import com.geum.mvcServer.apis.animal.model.AnimalVO;
 import com.geum.mvcServer.apis.animal.service.AnimalService;
 import com.geum.mvcServer.apis.batch.entity.AnimalDeseaseInfo;
-import com.geum.mvcServer.apis.batch.entity.AnimalDeseaseInfoRepository;
 import com.geum.mvcServer.apis.batch.entity.AnimalMedicine;
-import com.geum.mvcServer.apis.batch.entity.AnimalMedicineRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -23,13 +21,11 @@ import java.util.List;
 public class AnimalController {
 
     private final AnimalRepository animalRepository;
-    private final AnimalDeseaseInfoRepository animalDeseaseInfoRepository;
-    private final AnimalMedicineRepository animalMedicineRepository;
     private final AnimalService animalService;
 
     @RequestMapping("v1/animals/{providerId}")
-    public ResponseEntity<Result<List<Animal>>> getAllAnimals(@PathVariable("providerId") String providerId) {
-        List<Animal> animalList = animalRepository.findByProviderId(providerId);
+    public ResponseEntity<Result<List<Animal>>> getAllAnimals(@PathVariable("userId") String userId) {
+        List<Animal> animalList = animalRepository.findByUserId(userId);
 
         if(animalList.isEmpty()) {
             return ResponseEntity.notFound().build();

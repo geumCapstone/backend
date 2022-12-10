@@ -3,7 +3,7 @@ package com.geum.mvcServer.filter;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.geum.mvcServer.apis.user.entity.User;
+import com.geum.mvcServer.apis.user.model.UserLoginDTO;
 import com.geum.mvcServer.config.auth.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,6 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Date;
 
@@ -29,24 +28,23 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        UserLoginDTO userLoginDTO = null;
 
-        /** 1. Username, password */
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            User user = objectMapper.readValue(request.getInputStream(), User.class);
-
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
-
-            Authentication authentication = authenticationManager.authenticate(authenticationToken);
-
-            PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
-
-            return authentication;
+            userLoginDTO = objectMapper.readValue(request.getInputStream(), UserLoginDTO.class);
         } catch (IOException e) {
-            log.error("JwtAuthenticationFilter Error / 1. Username, Password Error, Check JSON");
+            e.printStackTrace();
         }
 
-        return null;
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userLoginDTO.getUsername(), userLoginDTO.getPassword());
+
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        log.info("PrincipalDetails: {}", principalDetails.getUser().getUsername(), principalDetails.getUser().getPassword());
+
+        return authentication;
     }
 
     @Override
@@ -62,6 +60,6 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .withClaim("nickname", principalDetails.getUser().getNickname())
                 .sign(Algorithm.HMAC512(JwtProperties.SECRET));
 
-        response.addHeader("Authorization", JwtProperties.HEADER_STRING + jwtToken);
+        response.addHeader(JwtProperties.HEADER_STRING, JwtProperties.TOKEN_PREFIX + jwtToken);
     }
 }

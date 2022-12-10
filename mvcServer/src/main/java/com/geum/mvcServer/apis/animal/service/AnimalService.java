@@ -22,14 +22,14 @@ public class AnimalService {
 
     public List<Animal> addAnimal(AnimalVO animalData) {
         Animal animal = new Animal();
-        animal.setProviderId(animalData.getProviderId());
+        animal.setUserId(animalData.getUserId());
         animal.setName(animalData.getName());
         animal.setRace(animalData.getRace());
         animal.setAge(animalData.getAge());
         animal.setBirthday(animalData.getBirthday());
 
         animalRepository.save(animal);
-        List<Animal> data = animalRepository.findByProviderId(animalData.getProviderId());
+        List<Animal> data = animalRepository.findByUserId(animalData.getUserId());
 
         return data;
     }

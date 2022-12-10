@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter @Setter
 public class AnimalVO {
 
-    private User providerId;
+    private User userId;
 
     private String name;
 
@@ -20,7 +20,7 @@ public class AnimalVO {
     private LocalDateTime birthday;
 
     public boolean isEmpty() {
-        return providerId == null || name == null || race == null || birthday == null;
+        return userId == null || name == null || race == null || birthday == null;
     }
 
 }
