@@ -1,5 +1,6 @@
 package com.geum.mvcServer.apis.event.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sun.istack.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,5 +30,6 @@ public class Event {
     private Timestamp regDate;
 
     @Column(nullable = true)
-    private Timestamp updateDta;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private Timestamp updateDate;
 }

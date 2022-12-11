@@ -1,5 +1,6 @@
 package com.geum.mvcServer.apis.animal.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.geum.mvcServer.apis.user.entity.User;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ public class AnimalVO {
 
     private int age;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDateTime birthday;
 
     public boolean isEmpty() {

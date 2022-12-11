@@ -7,10 +7,14 @@ import com.geum.mvcServer.apis.batch.entity.AnimalDeseaseInfo;
 import com.geum.mvcServer.apis.batch.entity.AnimalDeseaseInfoRepository;
 import com.geum.mvcServer.apis.batch.entity.AnimalMedicine;
 import com.geum.mvcServer.apis.batch.entity.AnimalMedicineRepository;
+import com.geum.mvcServer.apis.user.entity.User;
+import com.geum.mvcServer.config.SessionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +23,14 @@ public class AnimalService {
     private final AnimalRepository animalRepository;
     private final AnimalDeseaseInfoRepository animalDeseaseInfoRepository;
     private final AnimalMedicineRepository animalMedicineRepository;
+    private final SessionManager sessionManager;
+
+    public List<Animal> getAllAnimals(HttpServletRequest request) {
+        User user = (User) sessionManager.getSession(request);
+        List<Animal> animalList = animalRepository.findAllByUserId(user.getId());
+
+        return animalList;
+    }
 
     public List<Animal> addAnimal(AnimalVO animalData) {
         Animal animal = new Animal();
@@ -38,14 +50,16 @@ public class AnimalService {
      * CODE 0 : SUCCESS
      * CODE 1 : FAILED
      * CODE 2 : PROGRESSING */
-    public int deleteAnimal(Animal animal) {
-        if(!animalRepository.existsById(animal.getId())) {
+    public int deleteAnimal(Long id) {
+        if(!animalRepository.existsById(id)) {
             return 1;
         }
 
+        Optional<Animal> animal = animalRepository.findById(id);
+
         animalRepository.delete(animal);
 
-        if(animalRepository.existsById(animal.getId())) {
+        if(animalRepository.existsById(id)) {
             return 2; // 작업 대기
         }
 

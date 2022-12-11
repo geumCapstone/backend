@@ -1,17 +1,19 @@
 package com.geum.mvcServer.apis.animal.controller;
 
 import com.geum.mvcServer.apis.animal.entity.Animal;
-import com.geum.mvcServer.apis.animal.entity.AnimalRepository;
 import com.geum.mvcServer.apis.animal.model.AnimalVO;
 import com.geum.mvcServer.apis.animal.service.AnimalService;
 import com.geum.mvcServer.apis.batch.entity.AnimalDeseaseInfo;
 import com.geum.mvcServer.apis.batch.entity.AnimalMedicine;
+import com.geum.mvcServer.apis.user.entity.User;
+import com.geum.mvcServer.config.SessionManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.util.List;
 
@@ -20,12 +22,12 @@ import java.util.List;
 @Transactional
 public class AnimalController {
 
-    private final AnimalRepository animalRepository;
     private final AnimalService animalService;
+    private final SessionManager sessionManager;
 
-    @RequestMapping("v1/animals/{providerId}")
-    public ResponseEntity<Result<List<Animal>>> getAllAnimals(@PathVariable("userId") String userId) {
-        List<Animal> animalList = animalRepository.findByUserId(userId);
+    @GetMapping("v1/animals")
+    public ResponseEntity<Result<List<Animal>>> getAllAnimals(HttpServletRequest request) {
+        List<Animal> animalList = animalService.getAllAnimals(request);
 
         if(animalList.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -35,7 +37,10 @@ public class AnimalController {
     }
 
     @PostMapping("v1/animals")
-    public ResponseEntity<Result<List<Animal>>> addAnimal(@RequestBody AnimalVO animalData) {
+    public ResponseEntity<Result<List<Animal>>> addAnimal(@RequestBody AnimalVO animalData, HttpServletRequest request) {
+        User user = (User) sessionManager.getSession(request);
+        animalData.setUserId(user);
+
         if (animalData.isEmpty()) {
             return ResponseEntity.badRequest().build();
         } else {
@@ -47,9 +52,9 @@ public class AnimalController {
         }
     }
 
-    @DeleteMapping("v1/animals")
-    public ResponseEntity<Animal> deleteAnimal(@RequestBody Animal animal) {
-        int process = animalService.deleteAnimal(animal);
+    @DeleteMapping("v1/animals/{id}")
+    public ResponseEntity<Animal> deleteAnimal(@PathVariable("id") Long id) {
+        int process = animalService.deleteAnimal(id);
 
         if (process == 0) {
             return ResponseEntity.ok().build();
@@ -63,7 +68,9 @@ public class AnimalController {
     }
 
     @PutMapping("v1/animals/{id}")
-    public ResponseEntity<Animal> updateAnimal(@PathVariable("id") Long id, @RequestBody Animal animal) {
+    public ResponseEntity<Animal> updateAnimal(@PathVariable("id") Long id, @RequestBody Animal animal, HttpServletRequest request) {
+        User user = (User) sessionManager.getSession(request);
+        animal.setUserId(user);
         int process = animalService.updateAnimal(id, animal);
 
         if (process == 0) {
@@ -91,7 +98,6 @@ public class AnimalController {
         return ResponseEntity.ok().body(new Result<>(medicineList, medicineList.size()));
     }
 
-    /** 제네릭 문법을 통한 ResponseEntity 데이터 전달 효율 증가 */
     @Getter
     @Setter
     static class Result<T> {

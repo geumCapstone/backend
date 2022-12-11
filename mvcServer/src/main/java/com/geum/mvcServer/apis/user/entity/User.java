@@ -42,14 +42,14 @@ public class User {
 
     // private Timestamp loginDate;
 
-    @NotNull
-    private String role; // ROLE_USER, ROLE_ADMIN
+    @Column(nullable = true)
+    private String role; // ROLE_USER, ROLE_ADMIN, NULL => 탈퇴
 
     @OneToMany(mappedBy = "id", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Animal> animals = new ArrayList<>();
 
     public boolean isEmpty() {
-        return username != null || password != null || email != null || nickname != null || role != null;
+        return username == null || password == null || email == null || nickname == null || role == null;
     }
 
 }

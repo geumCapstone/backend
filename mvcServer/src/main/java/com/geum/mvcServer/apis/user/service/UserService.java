@@ -3,9 +3,12 @@ package com.geum.mvcServer.apis.user.service;
 import com.geum.mvcServer.apis.user.entity.User;
 import com.geum.mvcServer.apis.user.entity.UserRepository;
 import com.geum.mvcServer.apis.user.model.UserVO;
+import com.geum.mvcServer.config.SessionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -13,18 +16,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-
-    /*
-    public User idCheck(String providerId) {
-        User data = userRepository.findByProviderId(providerId);
-
-        if(data.isEmpty()) {
-            return null;
-        } else {
-            return data;
-        }
-    }
-     */
+    private final SessionManager sessionManager;
 
     public User registerUser(UserVO userVO) {
         User user = new User();
@@ -37,14 +29,41 @@ public class UserService {
 
         User saveUser = userRepository.save(user);
 
-        if (saveUser.isEmpty()) {
-            return null;
+        return saveUser;
+    }
+
+    public User editUserData(UserVO userVO, HttpServletRequest request) {
+        User user = (User) sessionManager.getSession(request);
+
+        User editUser = null;
+
+        if(!user.getUsername().equals(userVO.getUsername())) {
+            return editUser;
         } else {
-            return saveUser;
+            user.setPassword(userVO.getPassword());
+            user.setNickname(userVO.getNickname());
+            user.setEmail(userVO.getEmail());
+
+            if(user.getPassword().equals(userVO.getPassword())) {
+                user.setOldPassword(user.getPassword());
+            }
+
+            editUser = userRepository.save(user);
+
+            return editUser;
         }
     }
 
-    /** 해야할 것 -> 유저 수정, 탈퇴 등...?*/
+    public User outOfService(HttpServletRequest request) {
+        User user = (User) sessionManager.getSession(request);
+
+        user.setRole(null);
+        userRepository.save(user);
+
+        sessionManager.expire(request);
+
+        return user;
+    }
 
 
 }
